@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed": "node src/seed/seedAdmin.js",
-    "test:acceptance": "node test/acceptance.mjs"
+    "test:acceptance": "node test/acceptance.mjs",
+    "build:client": "npm --prefix ../client install && npm --prefix ../client run build"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

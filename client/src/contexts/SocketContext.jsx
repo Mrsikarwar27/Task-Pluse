@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext.jsx';
 
 const SocketContext = createContext(null);
-const socketUrl = import.meta.env.VITE_SOCKET_URL || '';
+const socketUrl = import.meta.env.DEV ? import.meta.env.VITE_SOCKET_URL || '' : undefined;
 
 export function SocketProvider({ children }) {
   const { token, user } = useAuth();
