@@ -5,19 +5,22 @@ import '@fontsource-variable/plus-jakarta-sans';
 import './index.css';
 import App from './App.jsx';
 import { AuthProvider } from './contexts/AuthContext.jsx';
+import { ThemeProvider } from './contexts/ThemeContext.jsx';
 import { SocketProvider } from './contexts/SocketContext.jsx';
 import { NotificationsProvider } from './contexts/NotificationsContext.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <SocketProvider>
-          <NotificationsProvider>
-            <App />
-          </NotificationsProvider>
-        </SocketProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <SocketProvider>
+            <NotificationsProvider>
+              <App />
+            </NotificationsProvider>
+          </SocketProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

@@ -24,7 +24,7 @@ export default function AppLayout() {
         <button
           type="button"
           aria-label="Close menu"
-          className="fixed inset-0 z-40 bg-ink/25 backdrop-blur-[1px] xl:hidden"
+          className="fixed inset-0 z-40 bg-ink backdrop-blur-[1px] xl:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       ) : null}

@@ -4,7 +4,7 @@ export default function ErrorState({ message, onRetry, title = 'Something went w
   return (
     <div className="flex flex-col items-start gap-3 rounded-2xl border border-[#FCD9C4] bg-primary-soft p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-primary">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface text-primary">
           <AlertTriangle className="h-4 w-4" aria-hidden="true" />
         </div>
         <div>

@@ -2,14 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg: #FFF8F5;
+  --surface: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --surface-muted: #FFF7F1;
+  --border: #F1E6DB;
+  --text: #1C1917;
+  --text-secondary: #78716C;
+  --primary-text: #A33900;
+  --primary-bg: #A33900;
+  --primary-bg-hover: #CC4900;
+  --primary-soft: #FFF1E8;
+  --primary-softer: #FFF7F1;
+  --accent: #F97316;
+  --accent-soft: #FFEDD5;
+  --success: #15803D;
+  --success-soft: #F0FDF4;
+  --danger: #B91C1C;
+  --danger-soft: #FEF2F2;
+  --warning: #B45309;
+  --warning-soft: #FFFBEB;
+  --ring: #F97316;
+  --shadow-soft: 0 1px 2px rgba(28, 25, 23, 0.04), 0 14px 34px -20px rgba(163, 57, 0, 0.22);
+  --shadow-lift: 0 2px 4px rgba(28, 25, 23, 0.04), 0 22px 48px -24px rgba(163, 57, 0, 0.3);
+  --shadow-panel: 0 24px 64px -28px rgba(28, 25, 23, 0.28);
+}
+
+.dark {
+  --bg: #161210;
+  --surface: #211B17;
+  --surface-raised: #2A231E;
+  --surface-muted: #332B25;
+  --border: #453A32;
+  --text: #F7F1EA;
+  --text-secondary: #B8AA9E;
+  --primary-text: #FB923C;
+  --primary-bg: #EA580C;
+  --primary-bg-hover: #C2410C;
+  --primary-soft: #3A2418;
+  --primary-softer: #2E2018;
+  --accent: #F97316;
+  --accent-soft: #3A2418;
+  --success: #86EFAC;
+  --success-soft: #1F3326;
+  --danger: #FCA5A5;
+  --danger-soft: #3A1F1F;
+  --warning: #FCD34D;
+  --warning-soft: #3A2E1A;
+  --ring: #FB923C;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 40px -20px rgba(0, 0, 0, 0.6);
+  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.45), 0 24px 52px -24px rgba(0, 0, 0, 0.7);
+  --shadow-panel: 0 28px 72px -28px rgba(0, 0, 0, 0.8);
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
   }
 
+  html.no-transitions *,
+  html.no-transitions *::before,
+  html.no-transitions *::after {
+    transition: none !important;
+  }
+
   body {
     @apply bg-cream font-sans text-ink antialiased;
     min-width: 320px;
+    font-size: 14px;
+    line-height: 22px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.01em;
   }
 
   ::selection {
@@ -17,11 +85,11 @@
   }
 
   * {
-    border-color: #f1e6db;
+    border-color: var(--border);
   }
 
   :focus-visible {
-    outline: 2px solid #f97316;
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
 
@@ -35,27 +103,31 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #e7d7c9;
+    background: #453A32;
     border-radius: 999px;
-    border: 2px solid #fff8f5;
+    border: 2px solid var(--bg);
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: #453A32;
   }
 }
 
 @layer components {
   .card {
-    @apply rounded-2xl border border-line bg-white shadow-soft;
+    @apply rounded-2xl border border-line bg-surface shadow-soft;
   }
 
   .btn {
-    @apply inline-flex select-none items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-primary {
-    @apply btn bg-primary text-white shadow-[0_10px_24px_-14px_rgba(163,57,0,0.9)] hover:bg-primary-container active:translate-y-px;
+    @apply btn bg-primary-solid text-white shadow-[0_10px_24px_-14px_rgba(163,57,0,0.9)] hover:bg-primary-container active:translate-y-px;
   }
 
   .btn-secondary {
-    @apply btn border border-line bg-white text-ink hover:border-accent/40 hover:bg-primary-softer active:translate-y-px;
+    @apply btn border border-line bg-surface text-ink hover:border-accent hover:bg-primary-softer active:translate-y-px;
   }
 
   .btn-ghost {
@@ -63,7 +135,7 @@
   }
 
   .btn-danger {
-    @apply btn bg-danger text-white hover:bg-red-800 active:translate-y-px;
+    @apply btn bg-danger text-white hover:opacity-90 active:translate-y-px;
   }
 
   .btn-sm {
@@ -71,18 +143,18 @@
   }
 
   .input {
-    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-muted/60 focus:border-accent focus:ring-4 focus:ring-accent/10 disabled:cursor-not-allowed disabled:bg-cream;
+    @apply w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent disabled:cursor-not-allowed disabled:bg-surface-muted;
   }
 
   .select {
-    @apply w-full appearance-none rounded-xl border border-line bg-white px-3.5 py-2.5 pr-9 text-sm text-ink outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10 disabled:cursor-not-allowed disabled:bg-cream;
+    @apply w-full appearance-none rounded-xl border border-line bg-surface px-3.5 py-2.5 pr-9 text-sm text-ink outline-none transition focus:border-accent focus:ring-4 focus:ring-accent disabled:cursor-not-allowed disabled:bg-surface-muted;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2378716C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
   }
 
   .label {
-    @apply mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-muted;
+    @apply mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.08em] text-muted;
   }
 
   .field-error {
@@ -90,15 +162,15 @@
   }
 
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-cream px-3 py-1 text-xs font-medium text-muted;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-muted px-3 py-1 text-xs font-medium text-muted;
   }
 
   .icon-btn {
-    @apply inline-flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-white text-muted transition hover:border-accent/40 hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-surface text-muted transition hover:border-accent hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .skeleton {
-    @apply animate-pulse rounded-xl bg-[#F5EAE1];
+    @apply animate-pulse rounded-xl bg-surface-muted;
   }
 
   .table-th {

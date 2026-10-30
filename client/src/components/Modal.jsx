@@ -31,7 +31,7 @@ export default function Modal({
   return createPortal(
     <div className="fixed inset-0 z-[80] overflow-y-auto">
       <div
-        className="fixed inset-0 animate-fade-in bg-ink/30 backdrop-blur-[2px]"
+        className="fixed inset-0 animate-fade-in bg-ink backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -41,7 +41,7 @@ export default function Modal({
           aria-modal="true"
           aria-labelledby="modal-title"
           className={cn(
-            'relative w-full animate-scale-in rounded-2xl border border-line bg-white shadow-panel',
+            'relative w-full animate-scale-in rounded-2xl border border-line bg-surface shadow-panel',
             maxWidth
           )}
         >
@@ -58,7 +58,7 @@ export default function Modal({
           </div>
           <div className="max-h-[70vh] overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
           {footer ? (
-            <div className="flex flex-col-reverse gap-2 border-t border-line bg-primary-softer/60 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+            <div className="flex flex-col-reverse gap-2 border-t border-line bg-primary-softer px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
               {footer}
             </div>
           ) : null}

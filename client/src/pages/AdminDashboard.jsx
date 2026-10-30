@@ -230,7 +230,7 @@ export default function AdminDashboard() {
                 <button
                   type="button"
                   onClick={() => updateParam('q', '')}
-                  className="rounded-full p-0.5 hover:bg-white/70"
+                  className="rounded-full p-0.5 hover:bg-surface"
                   aria-label="Clear search"
                 >
                   <X className="h-3 w-3" />
@@ -355,7 +355,7 @@ export default function AdminDashboard() {
           <>
             <div className="hidden overflow-x-auto xl:block">
               <table className="w-full min-w-[820px] border-collapse">
-                <thead className="border-b border-line bg-primary-softer/60">
+                <thead className="border-b border-line bg-primary-softer">
                   <tr>
                     <th className="table-th">Task</th>
                     <th className="table-th">Client</th>
@@ -367,7 +367,7 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y divide-line">
                   {tasks.map((task) => (
-                    <tr key={task._id} className="transition hover:bg-primary-softer/60">
+                    <tr key={task._id} className="transition hover:bg-primary-softer">
                       <td className="table-td max-w-[300px]">
                         <Link
                           to={`/admin/tasks/${task._id}`}
@@ -422,7 +422,7 @@ export default function AdminDashboard() {
                 <Link
                   key={task._id}
                   to={`/admin/tasks/${task._id}`}
-                  className="block px-4 py-4 transition hover:bg-primary-softer/60"
+                  className="block px-4 py-4 transition hover:bg-primary-softer"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">

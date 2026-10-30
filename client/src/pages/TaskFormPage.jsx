@@ -477,7 +477,7 @@ export default function TaskFormPage() {
                             'rounded-xl border px-2 py-2.5 text-center transition',
                             selected
                               ? 'border-primary bg-primary-soft text-primary shadow-sm'
-                              : 'border-line bg-white text-muted hover:border-accent/40 hover:bg-primary-softer'
+                              : 'border-line bg-surface text-muted hover:border-accent hover:bg-primary-softer'
                           )}
                         >
                           <span className="block text-xs font-bold">{priority.label}</span>

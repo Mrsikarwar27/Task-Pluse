@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { AlertCircle, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
+import { AlertCircle, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, Moon, Sun } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { useTheme } from '../contexts/ThemeContext.jsx';
 import { getApiErrorMessage } from '../lib/api.js';
 import { dashboardPath } from '../lib/utils.js';
 import { PageLoader } from '../components/LoadingState.jsx';
 
 export default function Login() {
   const { user, loading, login } = useAuth();
+  const { isDark, toggle } = useTheme();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,8 +45,18 @@ export default function Login() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-cream px-4 py-10 sm:px-6">
+      <button
+        type="button"
+        onClick={toggle}
+        className="icon-btn absolute right-4 top-4 z-10 h-10 w-10"
+        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        aria-pressed={isDark}
+        title={isDark ? 'Light mode' : 'Dark mode'}
+      >
+        {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+      </button>
       <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-primary-soft blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-accent-soft/70 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-accent-soft blur-3xl" />
       <div className="pointer-events-none absolute right-1/4 top-1/4 h-24 w-24 rounded-full border border-[#F3DFCF]" />
 
       <div className="relative w-full max-w-[430px]">

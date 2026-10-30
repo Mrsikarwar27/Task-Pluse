@@ -4,7 +4,7 @@ import { cn } from '../lib/utils.js';
 export default function Logo({ compact = false, className }) {
   return (
     <div className={cn('flex items-center gap-2.5', className)}>
-      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-[0_8px_18px_-10px_rgba(163,57,0,0.9)]">
+      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-solid text-white shadow-[0_8px_18px_-10px_rgba(163,57,0,0.9)]">
         <Activity className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
         <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent" />
       </div>

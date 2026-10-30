@@ -255,7 +255,7 @@ export default function ClientDashboard() {
               <span
                 className={cn(
                   'rounded-full px-1.5 py-0.5 text-[10px]',
-                  status === tab.value ? 'bg-white text-primary' : 'bg-primary-softer text-muted'
+                  status === tab.value ? 'bg-surface text-primary' : 'bg-primary-softer text-muted'
                 )}
               >
                 {counts[tab.value || 'All'] ?? 0}

@@ -33,7 +33,7 @@ function NavItem({ to, icon: Icon, label, onClick, end = false }) {
       {({ isActive }) => (
         <>
           {isActive ? (
-            <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
+            <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary-solid" />
           ) : null}
           <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
           <span>{label}</span>
@@ -58,7 +58,7 @@ export default function Sidebar({ open, onClose, onOpenNotifications }) {
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col border-r border-line bg-white transition-transform duration-300 ease-out xl:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col border-r border-line bg-surface transition-transform duration-300 ease-out xl:translate-x-0',
         open ? 'translate-x-0' : '-translate-x-full'
       )}
       aria-label="Main navigation"
@@ -71,7 +71,7 @@ export default function Sidebar({ open, onClose, onOpenNotifications }) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-5">
-        <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted/80">
+        <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">
           Menu
         </p>
         <nav className="space-y-1">
@@ -102,7 +102,7 @@ export default function Sidebar({ open, onClose, onOpenNotifications }) {
             <Bell className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
             <span>Notifications</span>
             {unreadCount > 0 ? (
-              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">
+              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-solid px-1.5 text-[10px] font-bold text-white">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             ) : null}

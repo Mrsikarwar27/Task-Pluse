@@ -87,7 +87,7 @@ export default function ResourceEditor({ resources, onChange, errors = {} }) {
         </div>
       ) : (
         resources.map((resource, index) => (
-          <div key={resource.key} className="rounded-xl border border-line bg-primary-softer/45 p-3.5">
+          <div key={resource.key} className="rounded-xl border border-line bg-primary-softer p-3.5">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">
                 Resource {index + 1}

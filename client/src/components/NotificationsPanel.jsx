@@ -105,9 +105,9 @@ export default function NotificationsPanel({ open, onClose }) {
 
   return createPortal(
     <div className="fixed inset-0 z-[75]">
-      <div className="fixed inset-0 animate-fade-in bg-ink/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="fixed inset-0 animate-fade-in bg-ink backdrop-blur-[2px]" onClick={onClose} />
       <aside
-        className="fixed inset-y-0 right-0 flex w-full max-w-[430px] animate-slide-in flex-col border-l border-line bg-white shadow-panel"
+        className="fixed inset-y-0 right-0 flex w-full max-w-[430px] animate-slide-in flex-col border-l border-line bg-surface shadow-panel"
         aria-label="Notifications"
       >
         <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-5">
@@ -127,7 +127,7 @@ export default function NotificationsPanel({ open, onClose }) {
           </button>
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-b border-line bg-primary-softer/60 px-5 py-2.5">
+        <div className="flex items-center justify-between gap-3 border-b border-line bg-primary-softer px-5 py-2.5">
           <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">
             Recent activity
           </span>
@@ -183,7 +183,7 @@ export default function NotificationsPanel({ open, onClose }) {
                     key={notification._id}
                     className={cn(
                       'relative border-b border-line transition',
-                      !notification.isRead && 'bg-primary-soft/75'
+                      !notification.isRead && 'bg-primary-soft'
                     )}
                   >
                     <button
@@ -196,7 +196,7 @@ export default function NotificationsPanel({ open, onClose }) {
                           'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
                           notification.isRead
                             ? 'bg-cream text-muted'
-                            : 'bg-white text-primary shadow-sm'
+                            : 'bg-surface text-primary shadow-sm'
                         )}
                       >
                         <Icon className="h-4 w-4" />
@@ -225,7 +225,7 @@ export default function NotificationsPanel({ open, onClose }) {
                         type="button"
                         onClick={(event) => handleMarkRead(event, notification)}
                         disabled={isMarking}
-                        className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg border border-[#FCD9C4] bg-white text-primary transition hover:bg-primary-soft disabled:opacity-50"
+                        className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg border border-[#FCD9C4] bg-surface text-primary transition hover:bg-primary-soft disabled:opacity-50"
                         aria-label="Mark notification as read"
                         title="Mark as read"
                       >

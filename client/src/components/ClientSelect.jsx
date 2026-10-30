@@ -54,7 +54,7 @@ export default function ClientSelect({ clients, value, onChange, error, disabled
         type="button"
         className={cn(
           'input flex items-center justify-between gap-3 text-left',
-          error && 'border-danger focus:border-danger focus:ring-danger/10',
+          error && 'border-danger focus:border-danger focus:ring-danger',
           disabled && 'cursor-not-allowed bg-cream opacity-70'
         )}
         onClick={toggle}
@@ -82,7 +82,7 @@ export default function ClientSelect({ clients, value, onChange, error, disabled
       {error ? <p className="field-error">{error}</p> : null}
 
       {open ? (
-        <div className="absolute left-0 right-0 z-30 mt-2 overflow-hidden rounded-xl border border-line bg-white shadow-lift">
+        <div className="absolute left-0 right-0 z-30 mt-2 overflow-hidden rounded-xl border border-line bg-surface shadow-lift">
           <div className="relative border-b border-line p-2">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
@@ -90,7 +90,7 @@ export default function ClientSelect({ clients, value, onChange, error, disabled
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              className="w-full rounded-lg border-0 bg-transparent py-2 pl-8 pr-2 text-sm text-ink outline-none placeholder:text-muted/60"
+              className="w-full rounded-lg border-0 bg-transparent py-2 pl-8 pr-2 text-sm text-ink outline-none placeholder:text-muted"
               placeholder="Search by name, email or phone…"
             />
           </div>

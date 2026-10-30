@@ -186,7 +186,7 @@ export default function ClientFormModal({ open, onClose, client, onSaved }) {
         </div>
 
         {isEdit ? (
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-primary-softer/60 p-3.5">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-primary-softer p-3.5">
             <input
               type="checkbox"
               checked={form.isActive}

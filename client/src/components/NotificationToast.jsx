@@ -31,7 +31,7 @@ export default function NotificationToast() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-[90] animate-toast-in sm:left-auto sm:w-full sm:max-w-sm">
-      <div className="flex items-start gap-3 rounded-2xl border border-[#FCD9C4] bg-white p-4 shadow-panel">
+      <div className="flex items-start gap-3 rounded-2xl border border-[#FCD9C4] bg-surface p-4 shadow-panel">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
           <Icon className="h-4 w-4" />
         </div>

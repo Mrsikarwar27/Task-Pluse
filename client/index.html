@@ -9,6 +9,16 @@
       content="TaskPulse - a simple work assignment and query tracking system."
     />
     <title>TaskPulse</title>
+    <script>
+      (function () {
+        try {
+          document.documentElement.classList.add('no-transitions');
+          if (localStorage.getItem('taskpulse-theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
