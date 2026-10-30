@@ -27,7 +27,7 @@ app.use(
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'taskpulse-api' });
+  res.json({ status: 'ok' });
 });
 
 app.use('/api/auth', authRoutes);
