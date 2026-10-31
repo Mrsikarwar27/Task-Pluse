@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   ArrowUpRight,
+  CalendarClock,
   CalendarDays,
   CheckCircle2,
   ClipboardList,
@@ -13,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import DueLabel from '../components/DueLabel.jsx';
+import BrowserNotificationsButton from '../components/BrowserNotificationsButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorState from '../components/ErrorState.jsx';
 import Pagination from '../components/Pagination.jsx';
@@ -23,7 +25,11 @@ import { CardSkeleton } from '../components/LoadingState.jsx';
 import api, { getApiErrorMessage } from '../lib/api.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useNotifications } from '../contexts/NotificationsContext.jsx';
-import { cn, formatDateTime, formatDuration } from '../lib/utils.js';
+import {
+  cn,
+  formatDurationWords,
+  formatScheduleMoment,
+} from '../lib/utils.js';
 
 const PAGE_SIZE = 8;
 
@@ -58,17 +64,29 @@ function TaskCard({ task }) {
       </p>
 
       <div className="mt-4 space-y-2 border-t border-line pt-3">
+        {task.startAt ? (
+          <div className="flex items-center justify-between gap-3">
+            <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
+              <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">
+                Starts: <span className="font-semibold text-ink">{formatScheduleMoment(task.startAt)}</span>
+              </span>
+            </span>
+          </div>
+        ) : null}
         <div className="flex items-center justify-between gap-3">
           <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
             <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{formatDateTime(task.deadline)}</span>
+            <span className="truncate">
+              Due: <span className="font-semibold text-ink">{formatScheduleMoment(task.deadline)}</span>
+            </span>
           </span>
           <DueLabel deadline={task.deadline} status={task.status} />
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted">
           <span className="flex items-center gap-1.5">
             <Clock3 className="h-3.5 w-3.5" />
-            {formatDuration(task.estimatedDuration)}
+            Duration: {formatDurationWords(task.estimatedDuration)}
           </span>
           {resourceCount > 0 ? (
             <span className="flex items-center gap-1.5">
@@ -185,14 +203,17 @@ export default function ClientDashboard() {
             Hi {user.name.split(' ')[0]}, here is everything assigned to you.
           </p>
         </div>
-        <button
-          type="button"
-          className="btn-secondary btn-sm w-fit"
-          onClick={() => setReloadKey((key) => key + 1)}
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          Refresh
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <BrowserNotificationsButton withHint />
+          <button
+            type="button"
+            className="btn-secondary btn-sm w-fit"
+            onClick={() => setReloadKey((key) => key + 1)}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {statsError ? (

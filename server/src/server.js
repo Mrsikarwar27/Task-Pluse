@@ -3,6 +3,7 @@ import app from './app.js';
 import { config } from './config/env.js';
 import { connectDatabase, disconnectDatabase } from './config/db.js';
 import { initSocket } from './sockets/index.js';
+import { startReminderScheduler, stopReminderScheduler } from './reminderScheduler.js';
 
 async function start() {
   await connectDatabase();
@@ -27,8 +28,13 @@ async function start() {
     console.log(`[TaskPulse] Socket.io ready. Allowed origins: ${config.clientOrigins.join(', ')}`);
   });
 
+  // Repeating start reminders (Part C). State lives on the task documents, so
+  // restarting the server never restarts the countdown or double-sends.
+  startReminderScheduler();
+
   const shutdown = async (signal) => {
     console.log(`\n[TaskPulse] ${signal} received. Shutting down...`);
+    stopReminderScheduler();
     server.close(async () => {
       await disconnectDatabase();
       process.exit(0);

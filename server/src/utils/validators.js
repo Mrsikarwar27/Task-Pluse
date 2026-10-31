@@ -53,6 +53,15 @@ export function validDate(value, label = 'Deadline') {
   return date;
 }
 
+// Accepts an optional date/time. undefined/'' /null all mean "not provided" and
+// return null, so existing API callers without the field keep working.
+export function validOptionalDate(value, label) {
+  if (value === undefined || value === null || value === '') return null;
+  const date = new Date(value);
+  assert(!Number.isNaN(date.getTime()), 422, `${label} must be a valid date and time.`);
+  return date;
+}
+
 export function validResourceUrl(value) {
   const url = requiredString(value, 'Resource URL', { max: 2048 });
   let parsed;

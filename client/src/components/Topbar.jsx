@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Activity, Bell, Menu, Moon, Search, Sun, X } from 'lucide-react';
 import Avatar from './Avatar.jsx';
+import BrowserNotificationsButton from './BrowserNotificationsButton.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useNotifications } from '../contexts/NotificationsContext.jsx';
 import { dashboardPath } from '../lib/utils.js';
@@ -106,6 +107,8 @@ export default function Topbar({ onMenu, onOpenNotifications }) {
           >
             {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
           </button>
+          {/* Part B: enable real browser notifications on explicit click */}
+          <BrowserNotificationsButton />
           <button
             type="button"
             onClick={onOpenNotifications}

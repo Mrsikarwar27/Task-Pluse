@@ -67,6 +67,33 @@ const taskSchema = new mongoose.Schema(
       required: [true, 'Deadline is required.'],
       index: true,
     },
+    // Optional exact start time chosen with a clock-style picker in the form.
+    // Default null keeps every existing task working without a migration.
+    startAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+    // Reminder bookkeeping (Part C). All fields are optional with safe defaults
+    // so old tasks read as "no reminders scheduled".
+    reminderAckAt: {
+      type: Date,
+      default: null,
+    },
+    remindersSent: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    lastReminderAt: {
+      type: Date,
+      default: null,
+    },
+    nextReminderAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
     estimatedDuration: {
       type: Number,
       required: [true, 'Estimated duration is required.'],

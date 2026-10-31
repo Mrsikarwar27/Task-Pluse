@@ -77,6 +77,58 @@ export function formatDuration(minutes) {
   return `${hours}h ${remainder}m`;
 }
 
+// ── Shared human-readable schedule formatting (Part A) ──────────────────────
+// One helper family used by every task card, the task detail page and the
+// form preview. Raw minutes ("180 minutes") never reach the UI.
+
+const scheduleDayFormatter = new Intl.DateTimeFormat('en-GB', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+});
+
+const scheduleTimeFormatter = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+});
+
+function wordPlural(value, unit) {
+  return `${value} ${unit}${value === 1 ? '' : 's'}`;
+}
+
+// "Fri, 31 Oct at 4:00 PM"
+export function formatScheduleMoment(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return `${scheduleDayFormatter.format(date)} at ${scheduleTimeFormatter.format(date)}`;
+}
+
+// 150 → "2 hours 30 minutes", 24h → "1 day", 1440*2+90 → "2 days 1 hour 30 minutes"
+export function formatDurationWords(minutes) {
+  const value = Number(minutes);
+  if (!Number.isFinite(value) || value < 1) return '—';
+
+  const totalMinutes = Math.round(value);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const remainderMinutes = totalMinutes % 60;
+
+  const parts = [];
+  if (days) parts.push(wordPlural(days, 'day'));
+  if (hours) parts.push(wordPlural(hours, 'hour'));
+  if (remainderMinutes || parts.length === 0) parts.push(wordPlural(remainderMinutes, 'minute'));
+  return parts.join(' ');
+}
+
+// Minutes between two pick, e.g. for the live form preview.
+export function computeDurationMinutes(start, deadline) {
+  const from = new Date(start).getTime();
+  const to = new Date(deadline).getTime();
+  if (Number.isNaN(from) || Number.isNaN(to) || to <= from) return null;
+  return Math.floor((to - from) / 60000);
+}
+
 function plural(value, unit) {
   return `${value} ${unit}${value === 1 ? '' : 's'}`;
 }

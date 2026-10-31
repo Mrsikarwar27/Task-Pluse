@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Bell, CheckCircle2, MessageSquare, RefreshCw, UserPlus, X } from 'lucide-react';
+import { Bell, BellRing, CheckCircle2, MessageSquare, RefreshCw, UserPlus, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useNotifications } from '../contexts/NotificationsContext.jsx';
 import { taskPath } from '../lib/utils.js';
@@ -9,6 +9,7 @@ const icons = {
   status_changed: RefreshCw,
   new_comment: MessageSquare,
   task_updated: CheckCircle2,
+  task_reminder: BellRing,
 };
 
 export default function NotificationToast() {

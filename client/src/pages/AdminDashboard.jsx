@@ -25,7 +25,7 @@ import { RowSkeleton } from '../components/LoadingState.jsx';
 import api from '../lib/api.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useNotifications } from '../contexts/NotificationsContext.jsx';
-import { cn, formatDateTime } from '../lib/utils.js';
+import { cn, formatScheduleMoment } from '../lib/utils.js';
 import { getApiErrorMessage } from '../lib/api.js';
 
 const PAGE_SIZE = 8;
@@ -392,8 +392,13 @@ export default function AdminDashboard() {
                       </td>
                       <td className="table-td">
                         <p className="whitespace-nowrap text-sm font-medium text-ink">
-                          {formatDateTime(task.deadline)}
+                          Due: {formatScheduleMoment(task.deadline)}
                         </p>
+                        {task.startAt ? (
+                          <p className="whitespace-nowrap text-[11px] text-muted">
+                            Starts: {formatScheduleMoment(task.startAt)}
+                          </p>
+                        ) : null}
                         <DueLabel deadline={task.deadline} status={task.status} className="mt-1" />
                       </td>
                       <td className="table-td">
@@ -441,7 +446,12 @@ export default function AdminDashboard() {
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
                     <PriorityBadge priority={task.priority} />
-                    <span className="text-xs text-muted">{formatDateTime(task.deadline)}</span>
+                    {task.startAt ? (
+                      <span className="text-xs text-muted">
+                        Starts: {formatScheduleMoment(task.startAt)}
+                      </span>
+                    ) : null}
+                    <span className="text-xs text-muted">Due: {formatScheduleMoment(task.deadline)}</span>
                     <DueLabel deadline={task.deadline} status={task.status} />
                   </div>
                 </Link>

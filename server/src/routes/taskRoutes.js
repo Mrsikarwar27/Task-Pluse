@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  acknowledgeReminder,
   createTask,
   deleteTask,
   getTask,
@@ -22,6 +23,8 @@ router
   .delete(authorize('admin'), deleteTask);
 
 router.patch('/:id/status', updateTaskStatus);
+// Reminders repeat until the assigned client (or the admin) acknowledges them.
+router.patch('/:id/acknowledge-reminder', acknowledgeReminder);
 router.route('/:id/comments').get(getComments).post(createComment);
 
 export default router;

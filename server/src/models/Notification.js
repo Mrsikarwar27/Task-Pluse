@@ -5,6 +5,7 @@ export const NOTIFICATION_TYPES = [
   'status_changed',
   'new_comment',
   'task_updated',
+  'task_reminder',
 ];
 
 const notificationSchema = new mongoose.Schema(

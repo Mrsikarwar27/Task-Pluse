@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell,
   BellOff,
+  BellRing,
   Check,
   CheckCheck,
   CheckCircle2,
@@ -16,6 +17,8 @@ import {
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useNotifications } from '../contexts/NotificationsContext.jsx';
 import { cn, formatRelative, taskPath } from '../lib/utils.js';
+import { DESKTOP_HINT_DENIED } from '../lib/browserNotifications.js';
+import api from '../lib/api.js';
 import EmptyState from './EmptyState.jsx';
 import ErrorState from './ErrorState.jsx';
 
@@ -24,6 +27,7 @@ const icons = {
   status_changed: RefreshCw,
   new_comment: MessageSquare,
   task_updated: CheckCircle2,
+  task_reminder: BellRing,
 };
 
 export default function NotificationsPanel({ open, onClose }) {
@@ -36,11 +40,24 @@ export default function NotificationsPanel({ open, onClose }) {
     refresh,
     markRead,
     markAllRead,
+    browserPermission,
+    acknowledgeTaskReminder,
   } = useNotifications();
   const navigate = useNavigate();
   const [actionError, setActionError] = useState('');
   const [markingId, setMarkingId] = useState(null);
   const [markingAll, setMarkingAll] = useState(false);
+  const [ackingId, setAckingId] = useState(null);
+  // taskId -> task with reminder fields, for reminder notifications in the list
+  const [reminderTasks, setReminderTasks] = useState({});
+
+  const reminderTaskIds = useMemo(() => {
+    const ids = notifications
+      .filter((notification) => notification.type === 'task_reminder')
+      .map((notification) => String(notification.task?._id || notification.task || ''))
+      .filter(Boolean);
+    return [...new Set(ids)].sort();
+  }, [notifications]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -56,6 +73,33 @@ export default function NotificationsPanel({ open, onClose }) {
       document.body.style.overflow = previousOverflow;
     };
   }, [open, onClose]);
+
+  // Look up which reminder tasks are still actively looping, so the
+  // "Got It - Stop Reminders" button appears only while reminders continue.
+  useEffect(() => {
+    if (!open || !reminderTaskIds.length) return undefined;
+    let active = true;
+    Promise.all(
+      reminderTaskIds.map((taskId) =>
+        api
+          .get(`/tasks/${taskId}`)
+          .then(({ data }) => ({ taskId, task: data.task }))
+          .catch(() => null)
+      )
+    ).then((rows) => {
+      if (!active) return;
+      setReminderTasks((previous) => {
+        const next = { ...previous };
+        for (const row of rows) {
+          if (row) next[row.taskId] = row.task;
+        }
+        return next;
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [open, reminderTaskIds]);
 
   if (!open) return null;
 
@@ -103,6 +147,30 @@ export default function NotificationsPanel({ open, onClose }) {
     }
   };
 
+  // Part C: acknowledge a repeating reminder straight from the panel.
+  const handleAcknowledge = async (event, notification) => {
+    event.stopPropagation();
+    const taskId = String(notification.task?._id || notification.task || '');
+    if (!taskId || ackingId || reminderTasks[taskId]?.reminderAckAt) return;
+    setActionError('');
+    setAckingId(notification._id);
+    try {
+      const data = await acknowledgeTaskReminder(taskId);
+      setReminderTasks((previous) => ({ ...previous, [taskId]: data.task }));
+      if (!notification.isRead) {
+        try {
+          await markRead(notification._id);
+        } catch {
+          // Notification already read or offline; reminders are stopped regardless.
+        }
+      }
+    } catch (err) {
+      setActionError(err?.response?.data?.error?.message || 'Could not stop the reminders.');
+    } finally {
+      setAckingId(null);
+    }
+  };
+
   return createPortal(
     <div className="fixed inset-0 z-[75]">
       <div className="fixed inset-0 animate-fade-in bg-ink backdrop-blur-[2px]" onClick={onClose} />
@@ -143,8 +211,12 @@ export default function NotificationsPanel({ open, onClose }) {
         </div>
 
         {actionError ? (
-          <div className="border-b border-[#FCD9C4] bg-primary-soft px-5 py-2.5 text-xs font-medium text-primary">
+          <div className="border-b border-[#FECACA] bg-dangerSoft px-5 py-2.5 text-xs font-medium text-danger">
             {actionError}
+          </div>
+        ) : browserPermission === 'denied' ? (
+          <div className="border-b border-line bg-primary-softer px-5 py-2.5 text-[11px] font-medium leading-snug text-muted">
+            {DESKTOP_HINT_DENIED}
           </div>
         ) : null}
 
@@ -178,6 +250,13 @@ export default function NotificationsPanel({ open, onClose }) {
               {notifications.map((notification) => {
                 const Icon = icons[notification.type] || Bell;
                 const isMarking = markingId === notification._id;
+                const reminderTaskId = String(notification.task?._id || notification.task || '');
+                const remindersActive =
+                  notification.type === 'task_reminder' &&
+                  Boolean(reminderTaskId) &&
+                  reminderTaskId in reminderTasks &&
+                  Boolean(reminderTasks[reminderTaskId]?.nextReminderAt);
+                const isAcking = ackingId === notification._id;
                 return (
                   <li
                     key={notification._id}
@@ -220,6 +299,23 @@ export default function NotificationsPanel({ open, onClose }) {
                         </span>
                       </span>
                     </button>
+                    {remindersActive ? (
+                      <div className="px-5 pb-3">
+                        <button
+                          type="button"
+                          onClick={(event) => handleAcknowledge(event, notification)}
+                          disabled={isAcking}
+                          className="btn-primary w-full px-3 py-2 text-xs"
+                        >
+                          {isAcking ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <BellRing className="h-3.5 w-3.5" />
+                          )}
+                          Got It - Stop Reminders
+                        </button>
+                      </div>
+                    ) : null}
                     {!notification.isRead ? (
                       <button
                         type="button"

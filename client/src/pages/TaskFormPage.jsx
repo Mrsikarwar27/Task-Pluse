@@ -19,7 +19,13 @@ import ErrorState from '../components/ErrorState.jsx';
 import ResourceEditor from '../components/ResourceEditor.jsx';
 import { PageLoader } from '../components/LoadingState.jsx';
 import api, { getApiErrorMessage } from '../lib/api.js';
-import { cn, formatDuration, isHttpUrl, toDateTimeLocal } from '../lib/utils.js';
+import {
+  cn,
+  computeDurationMinutes,
+  formatDurationWords,
+  isHttpUrl,
+  toDateTimeLocal,
+} from '../lib/utils.js';
 
 const priorities = [
   { value: 'Low', label: 'Low', helper: 'Can wait' },
@@ -32,8 +38,8 @@ function emptyForm(preselectedClient = '') {
     title: '',
     description: '',
     assignedTo: preselectedClient,
+    startAt: '',
     deadline: '',
-    estimatedDuration: '',
     priority: 'Medium',
     resources: [],
   };
@@ -100,8 +106,8 @@ export default function TaskFormPage() {
           title: task.title,
           description: task.description,
           assignedTo: task.assignedTo?._id || task.assignedTo,
+          startAt: toDateTimeLocal(task.startAt),
           deadline: toDateTimeLocal(task.deadline),
-          estimatedDuration: String(task.estimatedDuration),
           priority: task.priority,
           resources: (task.resources || []).map((resource, index) => ({
             key: `existing-${index}-${resource.url}`,
@@ -150,10 +156,18 @@ export default function TaskFormPage() {
       next.deadline = 'Enter a valid deadline.';
     }
 
-    const duration = Number(form.estimatedDuration);
-    if (!form.estimatedDuration) next.estimatedDuration = 'Estimated duration is required.';
-    else if (!Number.isInteger(duration) || duration < 1) {
-      next.estimatedDuration = 'Enter a whole number of minutes (at least 1).';
+    if (form.startAt && Number.isNaN(new Date(form.startAt).getTime())) {
+      next.startAt = 'Enter a valid start date and time.';
+    }
+
+    if (
+      !next.startAt &&
+      !next.deadline &&
+      form.startAt &&
+      form.deadline &&
+      new Date(form.deadline).getTime() <= new Date(form.startAt).getTime()
+    ) {
+      next.startAt = 'Deadline must be after the start time. Adjust the start or the deadline.';
     }
 
     form.resources.forEach((resource, index) => {
@@ -186,8 +200,11 @@ export default function TaskFormPage() {
         title: form.title.trim(),
         description: form.description.trim(),
         assignedTo: form.assignedTo,
+        // Optional exact start time, picked with the browser's clock control.
+        startAt: form.startAt ? new Date(form.startAt).toISOString() : null,
         deadline: new Date(form.deadline).toISOString(),
-        estimatedDuration: Number(form.estimatedDuration),
+        // Note: minutes are never typed anymore. The server computes the
+        // existing estimatedDuration field from start to deadline.
         priority: form.priority,
         resources: form.resources.map((resource) => ({
           label: resource.label.trim(),
@@ -273,7 +290,8 @@ export default function TaskFormPage() {
     );
   }
 
-  const durationPreview = Number(form.estimatedDuration) > 0 ? formatDuration(Number(form.estimatedDuration)) : null;
+  const durationMinutes = computeDurationMinutes(form.startAt, form.deadline);
+  const durationPreview = durationMinutes ? formatDurationWords(durationMinutes) : null;
 
   return (
     <div className="space-y-6">
@@ -296,7 +314,7 @@ export default function TaskFormPage() {
             <p className="mt-1.5 text-sm text-muted">
               {isEdit
                 ? 'Update the brief, schedule, resources or assigned client.'
-                : 'Give the client a clear brief, a deadline and any helpful resources.'}
+                : 'Give the client a clear brief, a schedule and any helpful resources. No minutes to type.'}
             </p>
           </div>
         </div>
@@ -417,8 +435,32 @@ export default function TaskFormPage() {
                 </div>
 
                 <div>
+                  <label htmlFor="task-start" className="label">
+                    Start Date and Time <span className="font-medium normal-case text-muted">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <Clock3 className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                    <input
+                      id="task-start"
+                      type="datetime-local"
+                      className={cn('input pl-10', errors.startAt && 'border-danger')}
+                      value={form.startAt}
+                      onChange={(event) => updateField('startAt', event.target.value)}
+                    />
+                  </div>
+                  {errors.startAt ? (
+                    <p className="field-error">{errors.startAt}</p>
+                  ) : (
+                    <p className="mt-1.5 text-xs text-muted">
+                      Pick the date on the calendar and the exact time on the clock. The client gets reminders
+                      from 30 minutes before this time until they confirm.
+                    </p>
+                  )}
+                </div>
+
+                <div>
                   <label htmlFor="task-deadline" className="label">
-                    Deadline
+                    Deadline (date and time)
                   </label>
                   <div className="relative">
                     <CalendarDays className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
@@ -433,34 +475,21 @@ export default function TaskFormPage() {
                   {errors.deadline ? <p className="field-error">{errors.deadline}</p> : null}
                 </div>
 
-                <div>
-                  <label htmlFor="task-duration" className="label">
-                    Estimated duration
-                  </label>
-                  <div className="relative">
-                    <Clock3 className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-                    <input
-                      id="task-duration"
-                      type="number"
-                      min="1"
-                      step="1"
-                      className={cn('input pl-10 pr-20', errors.estimatedDuration && 'border-danger')}
-                      value={form.estimatedDuration}
-                      onChange={(event) => updateField('estimatedDuration', event.target.value)}
-                      placeholder="180"
-                    />
-                    <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted">
-                      minutes
+                {durationPreview ? (
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-primary-softer px-3.5 py-2.5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">
+                      Duration
+                    </span>
+                    <span className="text-sm font-extrabold text-primary">
+                      {durationPreview}
                     </span>
                   </div>
-                  {errors.estimatedDuration ? (
-                    <p className="field-error">{errors.estimatedDuration}</p>
-                  ) : (
-                    <p className="mt-1.5 text-xs text-muted">
-                      {durationPreview ? `Shown as ${durationPreview}` : 'Use minutes, e.g. 180 for 3 hours.'}
-                    </p>
-                  )}
-                </div>
+                ) : (
+                  <p className="flex items-center gap-1.5 text-xs text-muted">
+                    <Info className="h-3.5 w-3.5 shrink-0" />
+                    Duration is calculated automatically from start time to deadline — no typing needed.
+                  </p>
+                )}
 
                 <div>
                   <span className="label">Priority</span>

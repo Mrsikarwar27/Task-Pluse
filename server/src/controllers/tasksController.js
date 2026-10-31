@@ -6,6 +6,10 @@ import { ApiError, assert } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { getCounterpartRecipients, notifyUsers } from '../utils/notifications.js';
 import {
+  cancelReminderSchedule,
+  scheduleReminderCycle,
+} from '../reminderScheduler.js';
+import {
   escapeRegex,
   normalizeResources,
   optionalString,
@@ -14,12 +18,39 @@ import {
   validDate,
   validEnum,
   validObjectId,
+  validOptionalDate,
 } from '../utils/validators.js';
 
 const TASK_POPULATE = [
   { path: 'assignedTo', select: 'name email phone role isActive' },
   { path: 'createdBy', select: 'name role' },
 ];
+
+// The task form no longer collects minutes; the duration is derived in the
+// background from start time to deadline and stored in the existing
+// estimatedDuration field so every consumer keeps working.
+function durationMinutesBetween(from, to) {
+  const minutes = Math.floor((new Date(to).getTime() - new Date(from).getTime()) / 60000);
+  return Math.max(1, minutes);
+}
+
+// When the admin did not type minutes and never picks a start time, fall back
+// to the minutes between save time and the (required) deadline.
+function resolveEstimatedDuration(provided, startAt, deadline) {
+  const value = Number(provided);
+  if (Number.isInteger(value) && value >= 1) return value;
+  if (startAt) return durationMinutesBetween(startAt, deadline);
+  return durationMinutesBetween(new Date(), deadline);
+}
+
+function assertDeadlineAfterStart(startAt, deadline) {
+  if (startAt && new Date(deadline).getTime() <= new Date(startAt).getTime()) {
+    throw new ApiError(
+      400,
+      'Deadline must be after the start date and time. Please adjust the start time or deadline.'
+    );
+  }
+}
 
 function populateTask(query) {
   return query.populate(TASK_POPULATE);
@@ -104,12 +135,9 @@ export const createTask = asyncHandler(async (req, res) => {
   const description = requiredString(req.body?.description, 'Description', { max: 5000 });
   const assignedTo = validObjectId(req.body?.assignedTo, 'Client');
   const deadline = validDate(req.body?.deadline);
-  const durationValue = Number(req.body?.estimatedDuration);
-  assert(
-    Number.isInteger(durationValue) && durationValue >= 1,
-    422,
-    'Estimated duration must be a whole number of minutes (at least 1).'
-  );
+  const startAt = validOptionalDate(req.body?.startAt, 'Start date and time');
+  assertDeadlineAfterStart(startAt, deadline);
+  const durationValue = resolveEstimatedDuration(req.body?.estimatedDuration, startAt, deadline);
   const priority = validEnum(req.body?.priority || 'Medium', TASK_PRIORITIES, 'Priority');
   const status = validEnum(req.body?.status || 'Not Started', TASK_STATUSES, 'Status');
   const resources = normalizeResources(req.body?.resources) || [];
@@ -120,17 +148,22 @@ export const createTask = asyncHandler(async (req, res) => {
     throw new ApiError(422, 'This client is deactivated and cannot receive new tasks.');
   }
 
-  const task = await Task.create({
+  const task = new Task({
     title,
     description,
     assignedTo,
     createdBy: req.user._id,
     deadline,
+    startAt,
     estimatedDuration: durationValue,
     priority,
     status,
     resources,
   });
+  // With a start time, prime the reminder cycle: next slot = startAt - 30 min,
+  // and the counters start fresh. Without a start time nothing is scheduled.
+  scheduleReminderCycle(task);
+  await task.save();
 
   const populated = await populateTask(Task.findById(task._id));
   await notifyUsers([client._id], {
@@ -193,6 +226,7 @@ export const updateTask = asyncHandler(async (req, res) => {
 
   const oldAssignee = task.assignedTo.toString();
   const oldStatus = task.status;
+  const oldStartAt = task.startAt ? task.startAt.getTime() : null;
   let assigneeChanged = false;
   let statusChanged = false;
 
@@ -217,6 +251,20 @@ export const updateTask = asyncHandler(async (req, res) => {
   if (req.body?.deadline !== undefined) {
     task.deadline = validDate(req.body.deadline);
   }
+  if (req.body?.startAt !== undefined) {
+    // Note: sending null clears an existing start time (old tasks never send
+    // this field at all and stay exactly as they are).
+    task.startAt = validOptionalDate(req.body.startAt, 'Start date and time');
+    if (!task.startAt) {
+      // No start time means no start reminders.
+      task.nextReminderAt = null;
+    } else if (task.startAt.getTime() !== oldStartAt) {
+      // A changed (or newly set) start time restarts the reminder cycle:
+      // next slot = startAt - 30 min, counters reset.
+      scheduleReminderCycle(task);
+    }
+    // An unchanged start time keeps the existing reminder cycle untouched.
+  }
   if (req.body?.estimatedDuration !== undefined) {
     const durationValue = Number(req.body.estimatedDuration);
     assert(
@@ -236,6 +284,26 @@ export const updateTask = asyncHandler(async (req, res) => {
   }
   if (req.body?.resources !== undefined) {
     task.resources = normalizeResources(req.body.resources);
+  }
+
+  assertDeadlineAfterStart(task.startAt, task.deadline);
+
+  // Recompute the minutes in the background whenever the schedule (start and
+  // deadline) is edited with the new form, which no longer sends minutes.
+  if (req.body?.estimatedDuration === undefined && (req.body?.startAt !== undefined || req.body?.deadline !== undefined)) {
+    if (task.startAt) {
+      task.estimatedDuration = durationMinutesBetween(task.startAt, task.deadline);
+    }
+    // Without a start time the previous minutes are kept: existing tasks edit
+    // exactly as before.
+  }
+
+  if (assigneeChanged) {
+    cancelReminderSchedule(task);
+  }
+  // Leaving "Not Started" stops the start-reminder cycle immediately.
+  if (statusChanged && task.status !== 'Not Started' && task.nextReminderAt !== null) {
+    cancelReminderSchedule(task);
   }
 
   await task.save();
@@ -279,6 +347,9 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
   }
 
   task.status = status;
+  if (status !== 'Not Started') {
+    cancelReminderSchedule(task);
+  }
   await task.save();
   const populated = await populateTask(Task.findById(task._id));
 
@@ -295,6 +366,29 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
   });
 
   res.json({ task: populated, message: `Status changed to ${status}.` });
+});
+
+export const acknowledgeReminder = asyncHandler(async (req, res) => {
+  validObjectId(req.params.id, 'Task');
+  const task = await Task.findById(req.params.id);
+  if (!task) throw new ApiError(404, 'Task not found.');
+  ensureTaskAccess(task, req.user);
+
+  if (!task.startAt) {
+    throw new ApiError(422, 'This task has no start time, so there are no reminders to stop.');
+  }
+
+  task.reminderAckAt = new Date();
+  task.nextReminderAt = null;
+  await task.save();
+
+  const populated = await populateTask(Task.findById(task._id));
+  res.json({
+    task: populated,
+    message: task.remindersSent > 0
+      ? 'Reminders stopped. No further reminders will be sent for this task.'
+      : 'Acknowledged. No further reminders will be sent for this task.',
+  });
 });
 
 export const deleteTask = asyncHandler(async (req, res) => {
